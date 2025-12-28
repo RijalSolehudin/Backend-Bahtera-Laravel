@@ -3,47 +3,64 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreGuestRequest;
+use App\Http\Requests\UpdateGuestRequest;
+use App\Http\Resources\GuestResource;
+use App\Services\GuestService;
+use App\Models\Guest;
+use App\Models\Invitation;
+use Illuminate\Support\Facades\Auth;
 
 class GuestController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $guestService;
+
+    public function __construct(GuestService $guestService)
     {
-        //
+        $this->guestService = $guestService;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function index(Invitation $invitation)
     {
-        //
+        if ($invitation->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $guests = $this->guestService->getGuestsForInvitation($invitation);
+
+        return GuestResource::collection($guests);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function store(StoreGuestRequest $request, Invitation $invitation)
     {
-        //
+        if ($invitation->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $guest = $this->guestService->createGuest($invitation, $request->validated());
+
+        return new GuestResource($guest);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateGuestRequest $request, Invitation $invitation, Guest $guest)
     {
-        //
+        if ($invitation->user_id !== Auth::id() || $guest->invitation_id !== $invitation->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $guest = $this->guestService->updateGuest($guest, $request->validated());
+
+        return new GuestResource($guest);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Invitation $invitation, Guest $guest)
     {
-        //
+        if ($invitation->user_id !== Auth::id() || $guest->invitation_id !== $invitation->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $this->guestService->deleteGuest($guest);
+
+        return response()->json(['message' => 'Guest deleted'], 204);
     }
 }

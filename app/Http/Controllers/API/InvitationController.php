@@ -3,47 +3,75 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreInvitationRequest;
+use App\Http\Requests\UpdateInvitationRequest;
+use App\Http\Resources\InvitationResource;
+use App\Services\InvitationService;
+use App\Models\Invitation;
+use Illuminate\Support\Facades\Auth;
 
 class InvitationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected $invitationService;
+
+    public function __construct(InvitationService $invitationService)
+    {
+        $this->invitationService = $invitationService;
+    }
+
+    public function publicShow($slug)
+    {
+        $invitation = $this->invitationService->findBySlug($slug);
+
+        if (!$invitation) {
+            return response()->json(['message' => 'Invitation not found'], 404);
+        }
+
+        return new InvitationResource($invitation);
+    }
+
     public function index()
     {
-        //
+        $invitations = $this->invitationService->getUserInvitations();
+
+        return InvitationResource::collection($invitations);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreInvitationRequest $request)
     {
-        //
+        $invitation = $this->invitationService->createInvitation($request->validated());
+
+        return new InvitationResource($invitation);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Invitation $invitation)
     {
-        //
+        if ($invitation->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return new InvitationResource($invitation);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateInvitationRequest $request, Invitation $invitation)
     {
-        //
+        if ($invitation->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $invitation = $this->invitationService->updateInvitation($invitation, $request->validated());
+
+        return new InvitationResource($invitation);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Invitation $invitation)
     {
-        //
+        if ($invitation->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $this->invitationService->deleteInvitation($invitation);
+
+        return response()->json(['message' => 'Invitation deleted'], 204);
     }
 }

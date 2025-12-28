@@ -3,47 +3,30 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreRSVPRequest;
+use App\Http\Resources\RSVPResource;
+use App\Services\RSVPService;
+use App\Models\Invitation;
 
 class RSVPController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $rsvpService;
+
+    public function __construct(RSVPService $rsvpService)
     {
-        //
+        $this->rsvpService = $rsvpService;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreRSVPRequest $request, $slug)
     {
-        //
-    }
+        $invitation = Invitation::where('slug', $slug)->first();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        if (!$invitation) {
+            return response()->json(['message' => 'Invitation not found'], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $rsvp = $this->rsvpService->createRSVP($invitation, $request->validated());
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return new RSVPResource($rsvp);
     }
 }

@@ -10,7 +10,7 @@ Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
 
 # Public: lihat undangan + kirim RSVP/ucapan
-Route::get('/invitations/{slug}', [InvitationController::class,'publicShow']);
+Route::get('/public/invitations/{slug}', [InvitationController::class,'publicShow']);
 Route::post('/invitations/{slug}/rsvp', [RSVPController::class,'store']);
 Route::post('/invitations/{slug}/wish', [WishController::class,'store']);
 
