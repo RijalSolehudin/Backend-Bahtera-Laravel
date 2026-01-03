@@ -91,7 +91,7 @@ class InvitationControllerTest extends TestCase
             'title' => 'New Invitation',
             'bride_name' => 'Bride',
             'groom_name' => 'Groom',
-            'date' => '2025-12-31',
+            'date' => '2026-1-31',
             'time' => '10:00',
             'city' => 'Jakarta',
             'address' => 'Venue Address',

@@ -16,4 +16,11 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    public function testEnvironmentInfo(){
+        dump(config('database.default'));
+        dump(config('cache.default'));
+        dump(app()->environment());
+
+    }
 }
